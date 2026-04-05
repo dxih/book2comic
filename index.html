@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book2Comic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --yellow: #FFE566;
+      --yellow-dark: #E6A800;
+      --red: #FF6B6B;
+      --teal: #4ECDC4;
+      --navy: #1a1a2e;
+      --card: #16213e;
+      --border: #111;
+    }
+
+    body {
+      background: var(--navy);
+      font-family: 'Comic Neue', cursive;
+      min-height: 100vh;
+      padding: 24px 16px;
+      color: white;
+    }
+
+    /* HEADER */
+    .header { text-align: center; margin-bottom: 36px; }
+    .logo {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(40px, 10vw, 72px);
+      color: var(--yellow);
+      letter-spacing: 5px;
+      line-height: 1;
+      text-shadow: 4px 4px 0 var(--yellow-dark), 8px 8px 0 rgba(0,0,0,0.3);
+    }
+    .tagline {
+      color: #888;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    /* SECTIONS */
+    .section { max-width: 680px; margin: 0 auto 28px; }
+    .section-label {
+      font-family: 'Bangers', cursive;
+      font-size: 20px;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .step1-label { color: var(--red); }
+    .step2-label { color: var(--teal); }
+
+    /* BOOK LIST */
+    .book-list { display: flex; flex-direction: column; gap: 10px; }
+    .book-item {
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 14px 18px;
+      cursor: pointer;
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.15s ease;
+    }
+    .book-item:hover { border-color: #555; }
+    .book-item.selected {
+      border: 3px solid var(--yellow);
+      background: #2a2a1a;
+      transform: translateX(4px);
+      box-shadow: 4px 4px 0 var(--yellow-dark);
+    }
+    .book-emoji { font-size: 28px; }
+    .book-title { font-weight: bold; font-size: 14px; color: white; }
+    .book-author { font-size: 12px; color: #888; }
+    .book-check {
+      margin-left: auto;
+      color: var(--yellow);
+      font-family: 'Bangers', cursive;
+      font-size: 16px;
+      display: none;
+    }
+    .book-item.selected .book-check { display: block; }
+
+    /* AGE GRID */
+    .age-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .age-item {
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 14px 10px;
+      cursor: pointer;
+      background: var(--card);
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .age-item:hover { border-color: #555; }
+    .age-item.selected {
+      border: 3px solid var(--teal);
+      background: #1a2a2a;
+      box-shadow: 4px 4px 0 #1ABC9C;
+    }
+    .age-label { font-weight: bold; font-size: 15px; }
+    .age-note { font-size: 11px; color: #888; margin-top: 4px; }
+
+    /* BUTTON */
+    .btn-wrap { max-width: 680px; margin: 0 auto 32px; text-align: center; }
+    #generateBtn {
+      background: #333;
+      color: #666;
+      border: 3px solid #111;
+      border-radius: 8px;
+      padding: 16px 40px;
+      font-family: 'Bangers', cursive;
+      font-size: 22px;
+      letter-spacing: 3px;
+      cursor: not-allowed;
+      width: 100%;
+      max-width: 360px;
+      transition: all 0.15s ease;
+    }
+    #generateBtn.ready {
+      background: var(--yellow);
+      color: #111;
+      cursor: pointer;
+      box-shadow: 5px 5px 0 var(--yellow-dark);
+      transform: translateY(-2px);
+    }
+    #generateBtn.ready:hover {
+      transform: translateY(-4px);
+      box-shadow: 7px 7px 0 var(--yellow-dark);
+    }
+    #generateBtn.loading {
+      background: #555;
+      color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ERROR */
+    #errorBox {
+      max-width: 680px;
+      margin: 0 auto 20px;
+      background: #2a1010;
+      border: 2px solid var(--red);
+      border-radius: 8px;
+      padding: 14px;
+      color: var(--red);
+      text-align: center;
+      display: none;
+    }
+
+    /* COMIC OUTPUT */
+    #comicOutput { max-width: 680px; margin: 0 auto; display: none; }
+
+    .comic-header {
+      background: var(--yellow);
+      border: 3px solid var(--border);
+      border-radius: 8px 8px 0 0;
+      padding: 18px 20px 14px;
+      box-shadow: 5px 5px 0 var(--border);
+    }
+    .comic-title {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(22px, 5vw, 36px);
+      color: #111;
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+    .comic-meta { font-size: 12px; color: #555; margin-top: 6px; }
+    .comic-lesson {
+      margin-top: 10px;
+      background: #111;
+      color: var(--yellow);
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-family: 'Bangers', cursive;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .panels-grid {
+      background: #222;
+      border: 3px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      box-shadow: 5px 5px 0 var(--border);
+    }
+
+    .panel {
+      border: 3px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 4px 4px 0 var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+    }
+    .panel-number {
+      background: var(--border);
+      color: white;
+      font-family: 'Bangers', cursive;
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 3px 8px;
+      text-transform: uppercase;
+    }
+    .panel-scene {
+      flex: 1;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 2px solid var(--border);
+      min-height: 100px;
+    }
+    .panel-emoji { font-size: 52px; line-height: 1; margin-bottom: 8px; }
+    .panel-scene-text {
+      font-size: 10px;
+      font-family: 'Comic Neue', cursive;
+      color: #333;
+      text-align: center;
+      font-style: italic;
+    }
+    .panel-text { padding: 10px 10px 6px; background: white; }
+    .panel-narration {
+      background: #FFFDE7;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 10.5px;
+      font-family: 'Comic Neue', cursive;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    .speech-bubble {
+      position: relative;
+      background: white;
+      border: 2.5px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-family: 'Bangers', cursive;
+      letter-spacing: 0.5px;
+      line-height: 1.4;
+      max-width: 90%;
+      margin: 0 auto 6px;
+      box-shadow: 2px 2px 0 var(--border);
+      color: #111;
+      text-align: center;
+    }
+
+    .panel-colors { --c0:#FFE566;--c1:#FF6B6B;--c2:#4ECDC4;--c3:#45B7D1;--c4:#96CEB4;--c5:#FFEAA7; }
+
+    .comic-footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #555;
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding-bottom: 32px;
+    }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid #888;
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .panels-grid { grid-template-columns: 1fr; }
+      .age-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">BOOK2COMIC</div>
+    <div class="tagline">Turn wisdom into adventures kids love</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section">
+    <div class="section-label step1-label">STEP 1 — CHOOSE A BOOK</div>
+    <div class="book-list" id="bookList"></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section">
+    <div class="section-label step2-label">STEP 2 — TARGET AGE GROUP</div>
+    <div class="age-grid" id="ageGrid"></div>
+  </div>
+
+  <!-- BUTTON -->
+  <div class="btn-wrap">
+    <button id="generateBtn" disabled>⚡ GENERATE COMIC STRIP</button>
+  </div>
+
+  <!-- ERROR -->
+  <div id="errorBox"></div>
+
+  <!-- COMIC OUTPUT -->
+  <div id="comicOutput">
+    <div class="comic-header">
+      <div class="comic-title" id="comicTitle"></div>
+      <div class="comic-meta" id="comicMeta"></div>
+      <div class="comic-lesson" id="comicLesson"></div>
+    </div>
+    <div class="panels-grid panel-colors" id="panelsGrid"></div>
+    <div class="comic-footer">GENERATED BY BOOK2COMIC · POWERED BY AI</div>
+  </div>
+
+  <script>
+    const BOOKS = [
+      { id: "how-to-win-friends", title: "How to Win Friends & Influence People", author: "Dale Carnegie", emoji: "🤝" },
+      { id: "rich-dad-poor-dad", title: "Rich Dad Poor Dad", author: "Robert Kiyosaki", emoji: "💰" },
+      { id: "atomic-habits", title: "Atomic Habits", author: "James Clear", emoji: "⚡" },
+      { id: "7-habits", title: "The 7 Habits of Highly Effective People", author: "Stephen Covey", emoji: "🌟" },
+      { id: "think-grow-rich", title: "Think and Grow Rich", author: "Napoleon Hill", emoji: "🧠" },
+    ];
+
+    const AGES = [
+      { id: "6-8", label: "Ages 6–8", note: "Simple words, big visuals" },
+      { id: "9-12", label: "Ages 9–12", note: "Short sentences, relatable scenarios" },
+      { id: "13-16", label: "Ages 13–16", note: "Teen context, deeper insight" },
+    ];
+
+    const PANEL_COLORS = ["#FFE566","#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7"];
+    const BORDER_COLORS = ["#E6A800","#C0392B","#1ABC9C","#2980B9","#27AE60","#F39C12"];
+
+    let selectedBook = null;
+    let selectedAge = null;
+
+    // Render book list
+    const bookList = document.getElementById("bookList");
+    BOOKS.forEach(book => {
+      const div = document.createElement("div");
+      div.className = "book-item";
+      div.dataset.id = book.id;
+      div.innerHTML = `
+        <span class="book-emoji">${book.emoji}</span>
+        <div>
+          <div class="book-title">${book.title}</div>
+          <div class="book-author">${book.author}</div>
+        </div>
+        <span class="book-check">✓ SELECTED</span>
+      `;
+      div.addEventListener("click", () => {
+        document.querySelectorAll(".book-item").forEach(el => el.classList.remove("selected"));
+        div.classList.add("selected");
+        selectedBook = book;
+        checkReady();
+      });
+      bookList.appendChild(div);
+    });
+
+    // Render age grid
+    const ageGrid = document.getElementById("ageGrid");
+    AGES.forEach(age => {
+      const div = document.createElement("div");
+      div.className = "age-item";
+      div.dataset.id = age.id;
+      div.innerHTML = `
+        <div class="age-label">${age.label}</div>
+        <div class="age-note">${age.note}</div>
+      `;
+      div.addEventListener("click", () => {
+        document.querySelectorAll(".age-item").forEach(el => el.classList.remove("selected"));
+        div.classList.add("selected");
+        selectedAge = age;
+        checkReady();
+      });
+      ageGrid.appendChild(div);
+    });
+
+    function checkReady() {
+      const btn = document.getElementById("generateBtn");
+      if (selectedBook && selectedAge) {
+        btn.classList.add("ready");
+        btn.disabled = false;
+      }
+    }
+
+    // Generate
+    document.getElementById("generateBtn").addEventListener("click", async () => {
+      if (!selectedBook || !selectedAge) return;
+
+      const btn = document.getElementById("generateBtn");
+      const errorBox = document.getElementById("errorBox");
+      const comicOutput = document.getElementById("comicOutput");
+
+      btn.classList.remove("ready");
+      btn.classList.add("loading");
+      btn.innerHTML = `<span class="spinner"></span> GENERATING...`;
+      btn.disabled = true;
+      errorBox.style.display = "none";
+      comicOutput.style.display = "none";
+
+      const prompt = `You are a children's comic writer. Create a 6-panel comic strip that teaches one key lesson from "${selectedBook.title}" by ${selectedBook.author}, adapted for children aged ${selectedAge.id} (${selectedAge.note}).
+
+Return ONLY a valid JSON object — no explanation, no markdown, no backticks. Format:
+{
+  "title": "comic episode title (short, exciting)",
+  "lesson": "the one core lesson being taught",
+  "panels": [
+    {
+      "emoji": "one emoji representing the scene",
+      "scene": "10-15 word visual description of what is happening in this panel",
+      "narration": "brief narrator caption (optional, can be null)",
+      "dialogue": "what a character says (optional, can be null)"
+    }
+  ]
+}
+
+Rules:
+- Exactly 6 panels
+- Use simple relatable scenarios (school, home, friends, market)
+- Nigerian/African context is welcome
+- Each panel moves the story forward
+- End with the lesson clearly landing
+- Age-appropriate language only`;
+
+      try {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1000,
+            messages: [{ role: "user", content: prompt }]
+          })
+        });
+
+        const data = await response.json();
+        const raw = (data.content || []).map(i => i.text || "").join("").trim();
+        const clean = raw.replace(/```json|```/g, "").trim();
+        const comic = JSON.parse(clean);
+
+        renderComic(comic);
+      } catch (err) {
+        errorBox.textContent = "Something went wrong generating the comic. Try again.";
+        errorBox.style.display = "block";
+        console.error(err);
+      } finally {
+        btn.classList.remove("loading");
+        btn.classList.add("ready");
+        btn.innerHTML = "⚡ GENERATE COMIC STRIP";
+        btn.disabled = false;
+      }
+    });
+
+    function renderComic(comic) {
+      document.getElementById("comicTitle").textContent = comic.title;
+      document.getElementById("comicMeta").innerHTML = `Based on <strong>${selectedBook.title}</strong> · For ${selectedAge.label}`;
+      document.getElementById("comicLesson").textContent = "💡 LESSON: " + comic.lesson;
+
+      const grid = document.getElementById("panelsGrid");
+      grid.innerHTML = "";
+
+      (comic.panels || []).forEach((panel, i) => {
+        const bg = PANEL_COLORS[i % PANEL_COLORS.length];
+        const borderC = BORDER_COLORS[i % BORDER_COLORS.length];
+
+        const div = document.createElement("div");
+        div.className = "panel";
+        div.innerHTML = `
+          <div class="panel-number">Panel ${i + 1}</div>
+          <div class="panel-scene" style="background:${bg}; border-bottom-color:${borderC}">
+            <div class="panel-emoji">${panel.emoji || "🎭"}</div>
+            <div class="panel-scene-text">${panel.scene || ""}</div>
+          </div>
+          <div class="panel-text">
+            ${panel.narration ? `<div class="panel-narration">📖 ${panel.narration}</div>` : ""}
+            ${panel.dialogue ? `<div class="speech-bubble">${panel.dialogue}</div>` : ""}
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+
+      const output = document.getElementById("comicOutput");
+      output.style.display = "block";
+      output.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  </script>
+</body>
+</html>
+      
