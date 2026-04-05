@@ -10,7 +10,7 @@ const BOOKS = [
 
 const AGES = [
   { id: "6-8", label: "Ages 6–8", note: "Simple words, big visuals" },
-  { id: "9-12", label: "Ages 9–12", note: "Short sentences, relatable scenarios" },
+  { id: "9-12", label: "Ages 9–12", note: "Short sentences,  relatable scenarios" },
   { id: "13-16", label: "Ages 13–16", note: "Teen context, deeper insight" },
 ];
 
